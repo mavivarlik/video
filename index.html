@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mavi Varlık - Özel Video Hub</title>
+    <style>
+        /* Modern, Premium Karanlık Tema */
+        body {
+            background-color: #0b0c10;
+            color: #c5c6c7;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .container {
+            max-width: 850px;
+            width: 100%;
+        }
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid #1f2833;
+            padding-bottom: 15px;
+            margin-bottom: 25px;
+        }
+        h1 { color: #66fcf1; margin: 0; font-size: 28px; text-shadow: 0 0 10px rgba(102,252,241,0.3); }
+        
+        /* Kullanıcı Profil Kartı */
+        .user-status {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: #1f2833;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 14px;
+        }
+        .avatar { width: 30px; height: 30px; border-radius: 50%; border: 2px solid #66fcf1; }
+
+        /* Giriş ve Kontrol Butonları */
+        .btn {
+            background: #45f3ff;
+            color: #0b0c10;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        .btn:hover { background: #1f2833; color: #45f3ff; box-shadow: 0 0 15px #45f3ff; }
+        .btn-danger { background: #fc4445; color: white; }
+        .btn-danger:hover { background: #1f2833; color: #fc4445; box-shadow: 0 0 15px #fc4445; }
+
+        /* Video Bölümü */
+        .video-box {
+            position: relative;
+            padding-bottom: 56.25%;
+            height: 0;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 5px 25px rgba(0,0,0,0.7);
+            margin-bottom: 25px;
+            border: 1px solid #1f2833;
+        }
+        .video-box iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
+
+        /* Görev ve Menü Alanı */
+        .control-panel {
+            display: flex;
+            justify-content: space-between;
+            background: #1f2833;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 25px;
+        }
+
+        /* Yönetici Paneli (Gizli) */
+        #adminPanel {
+            display: none;
+            background: #0b0c10;
+            border: 2px solid #fc4445;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 25px;
+        }
+
+        /* Yorum Bölümü */
+        .comments-box {
+            background: #1f2833;
+            padding: 20px;
+            border-radius: 8px;
+        }
+        .comment-form { display: flex; gap: 10px; margin-bottom: 20px; }
+        .comment-form input {
+            flex: 1;
+            background: #0b0c10;
+            border: 1px solid #45f3ff;
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        .comment {
+            background: #0b0c10;
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 10px;
+            border-left: 4px solid #66fcf1;
+        }
+        .comment-header { display: flex; justify-content: space-between; margin-bottom: 5px; font-size: 13px; }
+        .comment-user { color: #45f3ff; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>⚡ Mavi Varlık Hub</h1>
+        <div id="authSection">
+            <button class="btn" onclick="loginWithGoogle()">Google ile Giriş Yap</button>
+        </div>
+    </header>
+
+    <div class="control-panel">
+        <button class="btn" onclick="checkAdminGate()">Yönetici Girişi</button>
+        <button class="btn btn-danger" onclick="sendSignal()">Sinyal Gönder (Gizli Görev)</button>
+    </div>
+
+    <div id="alertMessage" style="color: #66fcf1; font-weight: bold; margin-bottom: 15px; text-align: center;"></div>
+
+    <div class="video-box">
+        <div id="ytPlayer"></div>
+    </div>
+
+    <div id="adminPanel">
+        <h3 style="color: #fc4445; margin-top: 0;">🛠️ Yönetici Komuta Merkezi (mavivarlık)</h3>
+        <p>Kullanıcı limitlerini sıfırla veya ana videoyu değiştir.</p>
+        <input type="text" id="newVideoId" placeholder="YouTube Video ID girin" style="padding: 8px; background: #222; color: #fff; border: 1px solid #fc4445; border-radius: 4px;">
+        <button class="btn" style="background: #fc4445; color: white;" onclick="changeVideo()">Videoyu Değiştir</button>
+    </div>
+
+    <div class="comments-box">
+        <h3>💬 Topluluk Yorumları</h3>
+        <div class="comment-form">
+            <input type="text" id="commentInput" placeholder="Bir yorum bırakın...">
+            <button class="btn" onclick="addComment()">Gönder</button>
+        </div>
+        <div id="commentsList">
+            <div class="comment">
+                <div class="comment-header"><span class="comment-user">YazılımcıDostu</span><span>12:40</span></div>
+                <div>Google girişi çok daha güvenli olmuş kanka, eline sağlık!</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Durum Değişkenleri
+    let userLogged = false;
+    let userProfile = {};
+    let videoLimit = 1;
+    let signalActive = false;
+
+    // SIMÜLE EDİLMİŞ GOOGLE GİRİŞİ (Firebase bağlandığında burası gerçek olacak)
+    function loginWithGoogle() {
+        userLogged = true;
+        userProfile = {
+            name: "Mavi Misafir",
+            img: "https://via.placeholder.com/30"
+        };
+        document.getElementById('authSection').innerHTML = `
+            <div class="user-status">
+                <img src="${userProfile.img}" class="avatar">
+                <span>${userProfile.name} (Hak: ${videoLimit})</span>
+            </div>
+        `;
+        document.getElementById('alertMessage').innerText = "Giriş başarılı! Hoş geldin.";
+    }
+
+    // ASCII YÖNETİCİ GİRİŞİ (097 Mantığı)
+    function checkAdminGate() {
+        let u = prompt("Yönetici Kullanıcı Adı:");
+        let p = prompt("Yönetici Şifresi:");
+        
+        // Şifre maskeleme: 097 ASCII kodu 'a' harfidir
+        let key = String.fromCharCode(97); 
+        let adminUser = "mavivarlık";
+        let adminPass = "slm" + key + "nki"; // slmkanki oldu
+
+        if(u === adminUser && p === adminPass) {
+            alert("Sistem açıldı, hoş geldin Mavi Varlık!");
+            document.getElementById('adminPanel').style.display = 'block';
+        } else {
+            alert("Erişim reddedildi!");
+        }
+    }
+
+    // GİZLI GÖREV TETİKLEME
+    function sendSignal() {
+        if(!userLogged) { alert("Önce Google ile giriş yapmalısın!"); return; }
+        signalActive = true;
+        document.getElementById('alertMessage').innerText = "📡 Sinyal gönderildi! Videoyu oynat ve 10. saniyeye ilerlet.";
+    }
+
+    // YOUTUBE PLAYER API ENTEGRASYONU
+    var tag = document.createElement('script');
+    tag.src = "https://www.youtube.com/iframe_api";
+    var firstScriptTag = document.getElementsByTagName('script')[0];
+    firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+
+    var player;
+    function onYouTubeIframeAPIReady() {
+        player = new YT.Player('ytPlayer', {
+            height: '100%',
+            width: '100%',
+            videoId: 'dQw4w9WgXcQ', // Örnek video
+            events: { 'onStateChange': onPlayerStateChange }
+        });
+    }
+
+    let timer;
+    function onPlayerStateChange(event) {
+        if (event.data == YT.PlayerState.PLAYING) {
+            timer = setInterval(function() {
+                let currTime = player.getCurrentTime();
+                if(signalActive && currTime >= 10 && videoLimit < 2) {
+                    videoLimit = 2;
+                    document.getElementById('alertMessage').innerText = "🎉 Görev Başarılı! Artık 2 video yükleme hakkın var!";
+                    if(userLogged) {
+                        document.querySelector('.user-status span').innerText = `${userProfile.name} (Hak: ${videoLimit})`;
+                    }
+                    clearInterval(timer);
+                }
+            }, 500);
+        } else {
+            clearInterval(timer);
+        }
+    }
+
+    // YORUM EKLEME FONKSİYONU
+    function addComment() {
+        if(!userLogged) { alert("Yorum yapmak için giriş yapmalısın!"); return; }
+        let text = document.getElementById('commentInput').value.trim();
+        if(!text) return;
+
+        let list = document.getElementById('commentsList');
+        let newComment = document.createElement('div');
+        newComment.className = 'comment';
+        newComment.innerHTML = `
+            <div class="comment-header"><span class="comment-user">${userProfile.name}</span><span>Şimdi</span></div>
+            <div>${text}</div>
+        `;
+        list.insertBefore(newComment, list.firstChild);
+        document.getElementById('commentInput').value = "";
+    }
+
+    function changeVideo() {
+        let id = document.getElementById('newVideoId').value.trim();
+        if(id) {
+            player.loadVideoById(id);
+            alert("Video güncellendi!");
+        }
+    }
+</script>
+</body>
+</html>
