@@ -1,271 +1,194 @@
 <!DOCTYPE html>
-<html lang="tr">
+<html lang="tr" data-theme="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mavi Varlık - Özel Video Hub</title>
-    <style>
-        /* Modern, Premium Karanlık Tema */
-        body {
-            background-color: #0b0c10;
-            color: #c5c6c7;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            margin: 0;
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-        .container {
-            max-width: 850px;
-            width: 100%;
-        }
-        header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 2px solid #1f2833;
-            padding-bottom: 15px;
-            margin-bottom: 25px;
-        }
-        h1 { color: #66fcf1; margin: 0; font-size: 28px; text-shadow: 0 0 10px rgba(102,252,241,0.3); }
-        
-        /* Kullanıcı Profil Kartı */
-        .user-status {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            background: #1f2833;
-            padding: 8px 15px;
-            border-radius: 20px;
-            font-size: 14px;
-        }
-        .avatar { width: 30px; height: 30px; border-radius: 50%; border: 2px solid #66fcf1; }
-
-        /* Giriş ve Kontrol Butonları */
-        .btn {
-            background: #45f3ff;
-            color: #0b0c10;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 5px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: 0.3s;
-        }
-        .btn:hover { background: #1f2833; color: #45f3ff; box-shadow: 0 0 15px #45f3ff; }
-        .btn-danger { background: #fc4445; color: white; }
-        .btn-danger:hover { background: #1f2833; color: #fc4445; box-shadow: 0 0 15px #fc4445; }
-
-        /* Video Bölümü */
-        .video-box {
-            position: relative;
-            padding-bottom: 56.25%;
-            height: 0;
-            border-radius: 12px;
-            overflow: hidden;
-            box-shadow: 0 5px 25px rgba(0,0,0,0.7);
-            margin-bottom: 25px;
-            border: 1px solid #1f2833;
-        }
-        .video-box iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
-
-        /* Görev ve Menü Alanı */
-        .control-panel {
-            display: flex;
-            justify-content: space-between;
-            background: #1f2833;
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 25px;
-        }
-
-        /* Yönetici Paneli (Gizli) */
-        #adminPanel {
-            display: none;
-            background: #0b0c10;
-            border: 2px solid #fc4445;
-            padding: 20px;
-            border-radius: 8px;
-            margin-bottom: 25px;
-        }
-
-        /* Yorum Bölümü */
-        .comments-box {
-            background: #1f2833;
-            padding: 20px;
-            border-radius: 8px;
-        }
-        .comment-form { display: flex; gap: 10px; margin-bottom: 20px; }
-        .comment-form input {
-            flex: 1;
-            background: #0b0c10;
-            border: 1px solid #45f3ff;
-            color: white;
-            padding: 10px;
-            border-radius: 5px;
-        }
-        .comment {
-            background: #0b0c10;
-            padding: 12px;
-            border-radius: 6px;
-            margin-bottom: 10px;
-            border-left: 4px solid #66fcf1;
-        }
-        .comment-header { display: flex; justify-content: space-between; margin-bottom: 5px; font-size: 13px; }
-        .comment-user { color: #45f3ff; font-weight: bold; }
-    </style>
+    <title>Mavi Varlık Video Hub</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/109/109114.png" id="dynamic-favicon"> <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <script src="https://www.youtube.com/iframe_api"></script>
 </head>
 <body>
+    <div id="skeleton-loader"><div class="spinner"></div><p>Sistem Aktifleşiyor...</p></div>
 
-<div class="container">
-    <header>
-        <h1>⚡ Mavi Varlık Hub</h1>
-        <div id="authSection">
-            <button class="btn" onclick="loginWithGoogle()">Google ile Giriş Yap</button>
-        </div>
-    </header>
+    <button id="return-video-btn" onclick="window.scrollTo(0,0)"><i class="fa-solid fa-arrow-up"></i> Videoya Dön</button>
 
-    <div class="control-panel">
-        <button class="btn" onclick="checkAdminGate()">Yönetici Girişi</button>
-        <button class="btn btn-danger" onclick="sendSignal()">Sinyal Gönder (Gizli Görev)</button>
-    </div>
+    <nav id="navbar">
+        <div class="logo" id="mv-logo" onclick="app.easterEgg()"><i class="fa-solid fa-code"></i> MV HUB</div> <div class="search-container">
+            <input type="text" id="search-bar" placeholder="Oyun, Kodlama veya Video Ara..." onkeyup="app.searchVideo(event)"> <div id="recent-searches" class="hidden"></div> </div>
 
-    <div id="alertMessage" style="color: #66fcf1; font-weight: bold; margin-bottom: 15px; text-align: center;"></div>
-
-    <div class="video-box">
-        <div id="ytPlayer"></div>
-    </div>
-
-    <div id="adminPanel">
-        <h3 style="color: #fc4445; margin-top: 0;">🛠️ Yönetici Komuta Merkezi (mavivarlık)</h3>
-        <p>Kullanıcı limitlerini sıfırla veya ana videoyu değiştir.</p>
-        <input type="text" id="newVideoId" placeholder="YouTube Video ID girin" style="padding: 8px; background: #222; color: #fff; border: 1px solid #fc4445; border-radius: 4px;">
-        <button class="btn" style="background: #fc4445; color: white;" onclick="changeVideo()">Videoyu Değiştir</button>
-    </div>
-
-    <div class="comments-box">
-        <h3>💬 Topluluk Yorumları</h3>
-        <div class="comment-form">
-            <input type="text" id="commentInput" placeholder="Bir yorum bırakın...">
-            <button class="btn" onclick="addComment()">Gönder</button>
-        </div>
-        <div id="commentsList">
-            <div class="comment">
-                <div class="comment-header"><span class="comment-user">YazılımcıDostu</span><span>12:40</span></div>
-                <div>Google girişi çok daha güvenli olmuş kanka, eline sağlık!</div>
+        <div class="controls">
+            <button onclick="app.toggleTheme()" class="tooltip" data-tip="Tema"><i class="fa-solid fa-moon"></i></button>
+            <button onclick="app.openModal('settings-modal')" class="tooltip" data-tip="Ayarlar"><i class="fa-solid fa-palette"></i></button>
+            <button onclick="app.openModal('shortcuts-modal')" class="tooltip" data-tip="Kısayollar"><i class="fa-regular fa-keyboard"></i></button> <select id="lang-selector" onchange="app.changeLang(this.value)">
+                <option value="tr">TR</option><option value="en">EN</option><option value="de">DE</option>
+            </select>
+            <div id="g_id_onload" data-client_id="MOCK_CLIENT_ID" data-callback="handleGoogleLogin"></div>
+            <div class="g_id_signin" data-type="icon"></div>
+            <button onclick="app.openModal('admin-modal')" id="admin-btn"><i class="fa-solid fa-terminal"></i></button>
+            <div class="profile-menu-container"> <button onclick="app.toggleProfileMenu()" class="tooltip" data-tip="Profil & Bildirimler">
+                    <i class="fa-solid fa-bell notification-dot"></i> <i class="fa-solid fa-user"></i>
+                </button>
+                <div id="profile-dropdown" class="hidden glass-panel">
+                    <p id="nav-username">Misafir</p>
+                    <button onclick="app.showHistory()"><i class="fa-solid fa-clock-rotate-left"></i> İzleme Geçmişi (17)</button>
+                    <button onclick="app.openModal('achievements-modal')"><i class="fa-solid fa-trophy"></i> Başarımlar (33)</button>
+                </div>
             </div>
         </div>
-    </div>
-</div>
+        <button id="hamburger" onclick="app.toggleMobileMenu()"><i class="fa-solid fa-bars"></i></button>
+    </nav>
 
-<script>
-    // Durum Değişkenleri
-    let userLogged = false;
-    let userProfile = {};
-    let videoLimit = 1;
-    let signalActive = false;
+    <marquee class="marquee" data-i18n="trending">🔥 Trendler: Undertale No-Hit | FNaF Lore | Percy Jackson Teorileri | Arduino Bitki Dostu</marquee>
 
-    // SIMÜLE EDİLMİŞ GOOGLE GİRİŞİ (Firebase bağlandığında burası gerçek olacak)
-    function loginWithGoogle() {
-        userLogged = true;
-        userProfile = {
-            name: "Mavi Misafir",
-            img: "https://via.placeholder.com/30"
-        };
-        document.getElementById('authSection').innerHTML = `
-            <div class="user-status">
-                <img src="${userProfile.img}" class="avatar">
-                <span>${userProfile.name} (Hak: ${videoLimit})</span>
+    <main id="main-content">
+        <section id="video-section">
+            <div id="channel-banner">
+                <div class="channel-info">
+                    <input type="file" id="pfp-upload" hidden onchange="app.uploadPfp(event)">
+                    <img src="https://via.placeholder.com/80" id="channel-pfp" onclick="document.getElementById('pfp-upload').click()">
+                    <div>
+                        <h2 id="editable-username" onclick="app.editField(this)">Mavi Varlık</h2> <p id="editable-bio" onclick="app.editField(this)">Siber Maceralar ve Kodlama</p>
+                        <button id="sub-btn" onclick="app.toggleSubscribe()">Abone Ol</button> </div>
+                </div>
             </div>
-        `;
-        document.getElementById('alertMessage').innerText = "Giriş başarılı! Hoş geldin.";
-    }
 
-    // ASCII YÖNETİCİ GİRİŞİ (097 Mantığı)
-    function checkAdminGate() {
-        let u = prompt("Yönetici Kullanıcı Adı:");
-        let p = prompt("Yönetici Şifresi:");
-        
-        // Şifre maskeleme: 097 ASCII kodu 'a' harfidir
-        let key = String.fromCharCode(97); 
-        let adminUser = "mavivarlık";
-        let adminPass = "slm" + key + "nki"; // slmkanki oldu
+            <div id="player-wrapper">
+                <div id="yt-player"></div>
+                <div id="custom-controls" class="glass-panel">
+                    <div class="progress-container" onclick="app.seekVideo(event)"><div id="progress-bar"></div></div>
+                    <div class="control-row">
+                        <button onclick="app.togglePlay()"><i class="fa-solid fa-play" id="play-icon"></i></button>
+                        <button onclick="app.toggleMute()"><i class="fa-solid fa-volume-high" id="vol-icon"></i></button>
+                        <input type="range" id="vol-slider" min="0" max="100" value="100" onchange="app.setVolume(this.value)">
+                        <span id="time-display">0:00 / 0:00</span>
+                        
+                        <div class="right-controls">
+                            <button onclick="app.toggleAutoplay()" id="autoplay-btn" class="active">Auto: ON</button>
+                            <button onclick="app.toggleLoop()" id="loop-btn"><i class="fa-solid fa-repeat"></i></button>
+                            <button onclick="app.toggleCC()"><i class="fa-solid fa-closed-captioning"></i></button>
+                            <select onchange="app.setSpeed(this.value)" class="glass-select">
+                                <option value="0.5">0.5x</option><option value="1" selected>1x</option><option value="1.5">1.5x</option><option value="2">2x</option>
+                            </select>
+                            <button onclick="app.togglePIP()"><i class="fa-solid fa-clone"></i></button>
+                            <button onclick="app.toggleTheater()"><i class="fa-solid fa-tv"></i></button>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
-        if(u === adminUser && p === adminPass) {
-            alert("Sistem açıldı, hoş geldin Mavi Varlık!");
-            document.getElementById('adminPanel').style.display = 'block';
-        } else {
-            alert("Erişim reddedildi!");
-        }
-    }
+            <div class="tags mt-10">
+                <span class="tag">#Yazılım</span> <span class="tag">#FNaF</span> <span class="tag">#Minecraft</span>
+            </div>
+            <div class="action-bar mt-10">
+                <div>
+                    <button onclick="app.like()"><i class="fa-solid fa-thumbs-up"></i> <span id="like-count">0</span></button> <button onclick="app.dislike()"><i class="fa-solid fa-thumbs-down"></i></button> <button onclick="app.share()"><i class="fa-solid fa-share"></i> Paylaş</button> <button onclick="app.copyTimestamp()"><i class="fa-solid fa-link"></i> Zamana Link</button> </div>
+                <button onclick="app.report()" class="text-danger"><i class="fa-solid fa-flag"></i> Şikayet Et (29)</button>
+            </div>
 
-    // GİZLI GÖREV TETİKLEME
-    function sendSignal() {
-        if(!userLogged) { alert("Önce Google ile giriş yapmalısın!"); return; }
-        signalActive = true;
-        document.getElementById('alertMessage').innerText = "📡 Sinyal gönderildi! Videoyu oynat ve 10. saniyeye ilerlet.";
-    }
+            <div id="comments-section" class="mt-20 glass-panel">
+                <h3 data-i18n="commentsTitle">Yorumlar</h3>
+                <div class="comment-input-box">
+                    <input type="text" id="comment-input" placeholder="Bir şeyler yaz..." onkeyup="if(event.key==='Enter') app.addComment()">
+                    <button onclick="app.addComment()"><i class="fa-solid fa-paper-plane"></i></button>
+                </div>
+                <div id="comment-list"></div>
+            </div>
+        </section>
 
-    // YOUTUBE PLAYER API ENTEGRASYONU
-    var tag = document.createElement('script');
-    tag.src = "https://www.youtube.com/iframe_api";
-    var firstScriptTag = document.getElementsByTagName('script')[0];
-    firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+        <aside id="sidebar">
+            <div class="glass-panel profile-card">
+                <h3><i class="fa-solid fa-rocket"></i> <span id="display-name">Misafir</span> <i id="top-contributor" class="fa-solid fa-star hidden text-gold tooltip" data-tip="Top Contributor"></i></h3>
+                <div class="xp-stats">
+                    <p>Seviye <span id="level-txt">1</span> - <span id="rank-txt">Çaylak</span></p>
+                    <div class="xp-bar-bg"><div id="xp-bar-fill"></div></div>
+                    <p><span id="xp-txt">0</span> XP (İzledikçe artar)</p>
+                    <p><i class="fa-solid fa-fire text-orange"></i> Seri: <span id="streak-txt">0</span> Gün</p>
+                </div>
+            </div>
 
-    var player;
-    function onYouTubeIframeAPIReady() {
-        player = new YT.Player('ytPlayer', {
-            height: '100%',
-            width: '100%',
-            videoId: 'dQw4w9WgXcQ', // Örnek video
-            events: { 'onStateChange': onPlayerStateChange }
-        });
-    }
+            <div class="glass-panel mt-10" id="live-chat-container">
+                <div class="chat-header">
+                    <h4>Canlı Sohbet</h4>
+                    <button onclick="app.toggleChat()">Gizle</button>
+                </div>
+                <div id="live-chat" class="chat-box">
+                    <p><strong>Zeynep:</strong> Bu kodlama serisi harika!</p>
+                    <p><strong>CreeperBoy:</strong> Undertale videosu ne zaman?</p>
+                </div>
+            </div>
 
-    let timer;
-    function onPlayerStateChange(event) {
-        if (event.data == YT.PlayerState.PLAYING) {
-            timer = setInterval(function() {
-                let currTime = player.getCurrentTime();
-                if(signalActive && currTime >= 10 && videoLimit < 2) {
-                    videoLimit = 2;
-                    document.getElementById('alertMessage').innerText = "🎉 Görev Başarılı! Artık 2 video yükleme hakkın var!";
-                    if(userLogged) {
-                        document.querySelector('.user-status span').innerText = `${userProfile.name} (Hak: ${videoLimit})`;
-                    }
-                    clearInterval(timer);
-                }
-            }, 500);
-        } else {
-            clearInterval(timer);
-        }
-    }
+            <div class="glass-panel mt-10">
+                <h4>Oynatma Listem <button onclick="app.addToPlaylist()" style="float:right">+</button></h4>
+                <ul id="playlist"></ul>
+            </div>
 
-    // YORUM EKLEME FONKSİYONU
-    function addComment() {
-        if(!userLogged) { alert("Yorum yapmak için giriş yapmalısın!"); return; }
-        let text = document.getElementById('commentInput').value.trim();
-        if(!text) return;
+            <div class="glass-panel mt-10" id="related-videos">
+                <h4 data-i18n="related">Sıradaki Videolar</h4>
+                </div>
+        </aside>
+    </main>
 
-        let list = document.getElementById('commentsList');
-        let newComment = document.createElement('div');
-        newComment.className = 'comment';
-        newComment.innerHTML = `
-            <div class="comment-header"><span class="comment-user">${userProfile.name}</span><span>Şimdi</span></div>
-            <div>${text}</div>
-        `;
-        list.insertBefore(newComment, list.firstChild);
-        document.getElementById('commentInput').value = "";
-    }
+    <footer class="glass-panel">
+        <div class="social-share">
+            <button onclick="app.shareSocial('tw')"><i class="fa-brands fa-twitter"></i></button>
+            <button onclick="app.shareSocial('wa')"><i class="fa-brands fa-whatsapp"></i></button>
+        </div>
+        <div class="footer-links">
+            <a href="#" onclick="app.openModal('about-modal')">Hakkımızda (43)</a>
+            <a href="#">Gizlilik (44)</a>
+            <a href="#" onclick="app.openModal('tos-modal')">Kullanım Şartları (45)</a>
+            <button onclick="app.openModal('recipe-modal')">🍹 Tarif (50)</button>
+            <button onclick="window.scrollTo(0,0)">Yukarı (47)</button>
+        </div>
+        <p>© 2026 Mavi Varlık | Siber Estetikle Kodlandı</p>
+    </footer>
 
-    function changeVideo() {
-        let id = document.getElementById('newVideoId').value.trim();
-        if(id) {
-            player.loadVideoById(id);
-            alert("Video güncellendi!");
-        }
-    }
-</script>
+    <div id="admin-modal" class="modal hidden">
+        <div class="modal-content glass-panel">
+            <h3>Sistem Yöneticisi</h3>
+            <input type="text" id="a-usr" placeholder="Kullanıcı Adı">
+            <div style="position:relative">
+                <input type="password" id="a-pwd" placeholder="Şifre (65)">
+                <i class="fa-solid fa-eye" onclick="app.togglePass('a-pwd')" style="position:absolute; right:10px; top:10px; cursor:pointer;"></i>
+            </div>
+            <input type="password" id="a-key" placeholder="Key">
+            <button onclick="app.verifyAdmin()">Giriş</button>
+            <button onclick="app.closeModal('admin-modal')">Kapat</button>
+        </div>
+    </div>
+
+    <div id="settings-modal" class="modal hidden">
+        <div class="modal-content glass-panel">
+            <h3>Görsel Ayarlar</h3>
+            <label>Tema Rengi (38): <input type="color" id="color-picker" value="#00f3ff" onchange="app.changeAccent(this.value)"></label>
+            <label>Yazı Boyutu (39): <input type="range" min="12" max="24" value="16" onchange="app.changeFontSize(this.value)"></label>
+            <button onclick="app.closeModal('settings-modal')">Kapat</button>
+        </div>
+    </div>
+
+    <div id="shortcuts-modal" class="modal hidden">
+        <div class="modal-content glass-panel">
+            <h3>Kısayollar</h3>
+            <p>K / Boşluk : Oynat/Duraklat</p><p>M : Sessiz</p><p>F : Tam Ekran / Sinema Modu</p>
+            <button onclick="app.closeModal('shortcuts-modal')">Kapat</button>
+        </div>
+    </div>
+    
+    <div id="recipe-modal" class="modal hidden">
+        <div class="modal-content glass-panel">
+            <h3>Mavi Varlık İksiri</h3>
+            <p>1. Limon ve portakal sık.<br>2. Nane ekle.<br>3. Maden suyu koy ve buz at. Afiyet olsun!</p>
+            <button onclick="app.closeModal('recipe-modal')">Kapat</button>
+        </div>
+    </div>
+
+    <div id="error-404" class="hidden">
+        <h2>404 - Video Bulunamadı!</h2>
+        <button onclick="location.reload()">Geri Dön</button>
+    </div>
+
+    <audio id="ui-click" src="https://www.soundjay.com/buttons/sounds/button-09.mp3"></audio> <script src="app.js"></script>
 </body>
 </html>
