@@ -5,190 +5,801 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mavi Varlık Video Hub</title>
     <link rel="stylesheet" href="style.css">
-    <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/109/109114.png" id="dynamic-favicon"> <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/109/109114.png" id="dynamic-favicon">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
     <script src="https://www.youtube.com/iframe_api"></script>
 </head>
 <body>
-    <div id="skeleton-loader"><div class="spinner"></div><p>Sistem Aktifleşiyor...</p></div>
+    <!-- Yükleme Ekranı -->
+    <div id="skeleton-loader">
+        <div class="spinner"></div>
+        <p class="loader-txt">Sistem Aktifleşiyor...</p>
+    </div>
 
-    <button id="return-video-btn" onclick="window.scrollTo(0,0)"><i class="fa-solid fa-arrow-up"></i> Videoya Dön</button>
+    <!-- Videoya Dön Butonu -->
+    <button id="return-video-btn" onclick="app.scrollToPlayer()">
+        <i class="fa-solid fa-arrow-up"></i> Videoya Dön
+    </button>
 
+    <!-- Navbar -->
     <nav id="navbar">
-        <div class="logo" id="mv-logo" onclick="app.easterEgg()"><i class="fa-solid fa-code"></i> MV HUB</div> <div class="search-container">
-            <input type="text" id="search-bar" placeholder="Oyun, Kodlama veya Video Ara..." onkeyup="app.searchVideo(event)"> <div id="recent-searches" class="hidden"></div> </div>
+        <div class="logo" onclick="app.navigate('home')">
+            <i class="fa-solid fa-code"></i> MV HUB
+        </div>
 
-        <div class="controls">
-            <button onclick="app.toggleTheme()" class="tooltip" data-tip="Tema"><i class="fa-solid fa-moon"></i></button>
-            <button onclick="app.openModal('settings-modal')" class="tooltip" data-tip="Ayarlar"><i class="fa-solid fa-palette"></i></button>
-            <button onclick="app.openModal('shortcuts-modal')" class="tooltip" data-tip="Kısayollar"><i class="fa-regular fa-keyboard"></i></button> <select id="lang-selector" onchange="app.changeLang(this.value)">
-                <option value="tr">TR</option><option value="en">EN</option><option value="de">DE</option>
+        <div class="search-wrapper">
+            <div class="search-container">
+                <i class="fa-solid fa-magnifying-glass search-icon"></i>
+                <input type="text" id="search-bar" placeholder="Oyun, Kodlama veya Video Ara..." autocomplete="off" oninput="app.searchInput(event)" onkeyup="app.searchVideo(event)">
+                <div id="recent-searches" class="hidden"></div>
+            </div>
+        </div>
+
+        <div class="controls" id="nav-controls">
+            <button onclick="app.toggleTheme()" class="tooltip" data-tip="Tema Değiştir" id="theme-btn">
+                <i class="fa-solid fa-moon"></i>
+            </button>
+            <button onclick="app.openModal('settings-modal')" class="tooltip" data-tip="Görsel Ayarlar">
+                <i class="fa-solid fa-palette"></i>
+            </button>
+            <button onclick="app.openModal('shortcuts-modal')" class="tooltip" data-tip="Kısayollar">
+                <i class="fa-regular fa-keyboard"></i>
+            </button>
+            <select id="lang-selector" onchange="app.changeLang(this.value)" class="tooltip" data-tip="Dil">
+                <option value="tr">🇹🇷 TR</option>
+                <option value="en">🇬🇧 EN</option>
+                <option value="de">🇩🇪 DE</option>
             </select>
-            <div id="g_id_onload" data-client_id="MOCK_CLIENT_ID" data-callback="handleGoogleLogin"></div>
-            <div class="g_id_signin" data-type="icon"></div>
-            <button onclick="app.openModal('admin-modal')" id="admin-btn"><i class="fa-solid fa-terminal"></i></button>
-            <div class="profile-menu-container"> <button onclick="app.toggleProfileMenu()" class="tooltip" data-tip="Profil & Bildirimler">
-                    <i class="fa-solid fa-bell notification-dot"></i> <i class="fa-solid fa-user"></i>
+
+            <!-- Admin Butonu (gizli) -->
+            <button onclick="app.openModal('admin-modal')" id="admin-btn" class="tooltip" data-tip="Sistem">
+                <i class="fa-solid fa-terminal"></i>
+            </button>
+
+            <!-- Profil Menüsü -->
+            <div class="profile-menu-container">
+                <button onclick="app.toggleProfileMenu()" class="tooltip" data-tip="Profil">
+                    <i class="fa-solid fa-bell" id="bell-icon"></i>
+                    <i class="fa-solid fa-user"></i>
                 </button>
-                <div id="profile-dropdown" class="hidden glass-panel">
-                    <p id="nav-username">Misafir</p>
-                    <button onclick="app.showHistory()"><i class="fa-solid fa-clock-rotate-left"></i> İzleme Geçmişi (17)</button>
-                    <button onclick="app.openModal('achievements-modal')"><i class="fa-solid fa-trophy"></i> Başarımlar (33)</button>
+                <div id="profile-dropdown" class="hidden glass-panel dropdown-menu">
+                    <div class="dropdown-user">
+                        <img id="nav-pfp" src="https://placehold.co/32x32/0a0a0f/00f3ff?text=MV" alt="pfp">
+                        <span id="nav-username">Misafir</span>
+                    </div>
+                    <hr class="dropdown-divider">
+                    <button onclick="app.navigate('home'); app.closeProfileMenu()">
+                        <i class="fa-solid fa-house"></i> Ana Sayfa
+                    </button>
+                    <button onclick="app.showHistory(); app.closeProfileMenu()">
+                        <i class="fa-solid fa-clock-rotate-left"></i> İzleme Geçmişi
+                    </button>
+                    <button onclick="app.openModal('achievements-modal'); app.closeProfileMenu()">
+                        <i class="fa-solid fa-trophy"></i> Başarımlar
+                    </button>
+                    <button onclick="app.openModal('playlist-modal'); app.closeProfileMenu()">
+                        <i class="fa-solid fa-list"></i> Oynatma Listem
+                    </button>
                 </div>
             </div>
         </div>
-        <button id="hamburger" onclick="app.toggleMobileMenu()"><i class="fa-solid fa-bars"></i></button>
+
+        <button id="hamburger" onclick="app.toggleMobileMenu()" aria-label="Menü">
+            <i class="fa-solid fa-bars"></i>
+        </button>
     </nav>
 
-    <marquee class="marquee" data-i18n="trending">🔥 Trendler: Undertale No-Hit | FNaF Lore | Percy Jackson Teorileri | Arduino Bitki Dostu</marquee>
+    <!-- Trend Bandı -->
+    <div class="trend-ticker" id="trend-ticker">
+        <span class="ticker-label"><i class="fa-solid fa-fire"></i> Trend</span>
+        <div class="ticker-track" id="ticker-track">
+            <span data-i18n="trending">🔥 Trendler: Undertale No-Hit | FNaF Lore | Percy Jackson Teorileri | Arduino Bitki Dostu</span>
+        </div>
+    </div>
 
-    <main id="main-content">
-        <section id="video-section">
-            <div id="channel-banner">
-                <div class="channel-info">
-                    <input type="file" id="pfp-upload" hidden onchange="app.uploadPfp(event)">
-                    <img src="https://via.placeholder.com/80" id="channel-pfp" onclick="document.getElementById('pfp-upload').click()">
-                    <div>
-                        <h2 id="editable-username" onclick="app.editField(this)">Mavi Varlık</h2> <p id="editable-bio" onclick="app.editField(this)">Siber Maceralar ve Kodlama</p>
-                        <button id="sub-btn" onclick="app.toggleSubscribe()">Abone Ol</button> </div>
+    <!-- ===== SAYFA: ANA SAYFA ===== -->
+    <div id="page-home" class="page hidden">
+        <div class="home-hero glass-panel">
+            <div class="hero-content">
+                <h1><i class="fa-solid fa-code"></i> Mavi Varlık Video Hub</h1>
+                <p>Oyun, Kodlama ve Siber Dünya Videoları</p>
+                <div class="hero-actions">
+                    <button class="btn-primary" onclick="app.navigate('videos')">
+                        <i class="fa-solid fa-film"></i> Videolara Gözat
+                    </button>
+                    <button class="btn-secondary" onclick="app.navigate('shorts')">
+                        <i class="fa-solid fa-mobile-screen"></i> Shorts İzle
+                    </button>
                 </div>
             </div>
+            <div class="hero-stats">
+                <div class="stat-box">
+                    <span id="home-total-videos">0</span>
+                    <small>Video</small>
+                </div>
+                <div class="stat-box">
+                    <span id="home-total-views">0</span>
+                    <small>İzlenme</small>
+                </div>
+                <div class="stat-box">
+                    <span id="home-subscribers">142K</span>
+                    <small>Abone</small>
+                </div>
+            </div>
+        </div>
 
-            <div id="player-wrapper">
-                <div id="yt-player"></div>
-                <div id="custom-controls" class="glass-panel">
-                    <div class="progress-container" onclick="app.seekVideo(event)"><div id="progress-bar"></div></div>
-                    <div class="control-row">
-                        <button onclick="app.togglePlay()"><i class="fa-solid fa-play" id="play-icon"></i></button>
-                        <button onclick="app.toggleMute()"><i class="fa-solid fa-volume-high" id="vol-icon"></i></button>
-                        <input type="range" id="vol-slider" min="0" max="100" value="100" onchange="app.setVolume(this.value)">
-                        <span id="time-display">0:00 / 0:00</span>
-                        
-                        <div class="right-controls">
-                            <button onclick="app.toggleAutoplay()" id="autoplay-btn" class="active">Auto: ON</button>
-                            <button onclick="app.toggleLoop()" id="loop-btn"><i class="fa-solid fa-repeat"></i></button>
-                            <button onclick="app.toggleCC()"><i class="fa-solid fa-closed-captioning"></i></button>
-                            <select onchange="app.setSpeed(this.value)" class="glass-select">
-                                <option value="0.5">0.5x</option><option value="1" selected>1x</option><option value="1.5">1.5x</option><option value="2">2x</option>
-                            </select>
-                            <button onclick="app.togglePIP()"><i class="fa-solid fa-clone"></i></button>
-                            <button onclick="app.toggleTheater()"><i class="fa-solid fa-tv"></i></button>
+        <!-- Kanal Bilgisi -->
+        <div class="channel-section glass-panel">
+            <div id="home-channel-banner">
+                <div class="channel-info">
+                    <input type="file" id="pfp-upload" hidden accept="image/*" onchange="app.uploadPfp(event)">
+                    <img src="https://placehold.co/80x80/0a0a0f/00f3ff?text=MV" id="channel-pfp"
+                         onclick="document.getElementById('pfp-upload').click()"
+                         class="tooltip" data-tip="Fotoğrafı Değiştir" alt="Kanal Fotoğrafı">
+                    <div class="channel-text">
+                        <h2 id="editable-username" onclick="app.editField(this)" class="tooltip" data-tip="Düzenle">Mavi Varlık</h2>
+                        <p id="editable-bio" onclick="app.editField(this)" class="tooltip" data-tip="Düzenle">Siber Maceralar ve Kodlama</p>
+                        <div class="channel-actions">
+                            <button id="sub-btn" onclick="app.toggleSubscribe()">
+                                <i class="fa-solid fa-bell"></i> Abone Ol
+                            </button>
+                            <span class="sub-count">142.450 abone</span>
                         </div>
                     </div>
                 </div>
             </div>
-
-            <div class="tags mt-10">
-                <span class="tag">#Yazılım</span> <span class="tag">#FNaF</span> <span class="tag">#Minecraft</span>
-            </div>
-            <div class="action-bar mt-10">
-                <div>
-                    <button onclick="app.like()"><i class="fa-solid fa-thumbs-up"></i> <span id="like-count">0</span></button> <button onclick="app.dislike()"><i class="fa-solid fa-thumbs-down"></i></button> <button onclick="app.share()"><i class="fa-solid fa-share"></i> Paylaş</button> <button onclick="app.copyTimestamp()"><i class="fa-solid fa-link"></i> Zamana Link</button> </div>
-                <button onclick="app.report()" class="text-danger"><i class="fa-solid fa-flag"></i> Şikayet Et (29)</button>
-            </div>
-
-            <div id="comments-section" class="mt-20 glass-panel">
-                <h3 data-i18n="commentsTitle">Yorumlar</h3>
-                <div class="comment-input-box">
-                    <input type="text" id="comment-input" placeholder="Bir şeyler yaz..." onkeyup="if(event.key==='Enter') app.addComment()">
-                    <button onclick="app.addComment()"><i class="fa-solid fa-paper-plane"></i></button>
-                </div>
-                <div id="comment-list"></div>
-            </div>
-        </section>
-
-        <aside id="sidebar">
-            <div class="glass-panel profile-card">
-                <h3><i class="fa-solid fa-rocket"></i> <span id="display-name">Misafir</span> <i id="top-contributor" class="fa-solid fa-star hidden text-gold tooltip" data-tip="Top Contributor"></i></h3>
-                <div class="xp-stats">
-                    <p>Seviye <span id="level-txt">1</span> - <span id="rank-txt">Çaylak</span></p>
-                    <div class="xp-bar-bg"><div id="xp-bar-fill"></div></div>
-                    <p><span id="xp-txt">0</span> XP (İzledikçe artar)</p>
-                    <p><i class="fa-solid fa-fire text-orange"></i> Seri: <span id="streak-txt">0</span> Gün</p>
-                </div>
-            </div>
-
-            <div class="glass-panel mt-10" id="live-chat-container">
-                <div class="chat-header">
-                    <h4>Canlı Sohbet</h4>
-                    <button onclick="app.toggleChat()">Gizle</button>
-                </div>
-                <div id="live-chat" class="chat-box">
-                    <p><strong>Zeynep:</strong> Bu kodlama serisi harika!</p>
-                    <p><strong>CreeperBoy:</strong> Undertale videosu ne zaman?</p>
-                </div>
-            </div>
-
-            <div class="glass-panel mt-10">
-                <h4>Oynatma Listem <button onclick="app.addToPlaylist()" style="float:right">+</button></h4>
-                <ul id="playlist"></ul>
-            </div>
-
-            <div class="glass-panel mt-10" id="related-videos">
-                <h4 data-i18n="related">Sıradaki Videolar</h4>
-                </div>
-        </aside>
-    </main>
-
-    <footer class="glass-panel">
-        <div class="social-share">
-            <button onclick="app.shareSocial('tw')"><i class="fa-brands fa-twitter"></i></button>
-            <button onclick="app.shareSocial('wa')"><i class="fa-brands fa-whatsapp"></i></button>
         </div>
-        <div class="footer-links">
-            <a href="#" onclick="app.openModal('about-modal')">Hakkımızda (43)</a>
-            <a href="#">Gizlilik (44)</a>
-            <a href="#" onclick="app.openModal('tos-modal')">Kullanım Şartları (45)</a>
-            <button onclick="app.openModal('recipe-modal')">🍹 Tarif (50)</button>
-            <button onclick="window.scrollTo(0,0)">Yukarı (47)</button>
+
+        <!-- Öne Çıkan Videolar -->
+        <div class="section-header">
+            <h2><i class="fa-solid fa-star"></i> Öne Çıkan</h2>
         </div>
-        <p>© 2026 Mavi Varlık | Siber Estetikle Kodlandı</p>
+        <div class="video-grid" id="home-featured-grid"></div>
+
+        <!-- Son Yüklenenler -->
+        <div class="section-header">
+            <h2><i class="fa-solid fa-clock"></i> Son Yüklenenler</h2>
+            <button class="see-all" onclick="app.navigate('videos')">Tümünü Gör →</button>
+        </div>
+        <div class="video-grid" id="home-recent-grid"></div>
+
+        <!-- Shorts Önizleme -->
+        <div class="section-header">
+            <h2><i class="fa-solid fa-mobile-screen"></i> Shorts</h2>
+            <button class="see-all" onclick="app.navigate('shorts')">Tümünü Gör →</button>
+        </div>
+        <div class="shorts-row" id="home-shorts-row"></div>
+    </div>
+
+    <!-- ===== SAYFA: VİDEOLAR ===== -->
+    <div id="page-videos" class="page hidden">
+        <div class="page-header">
+            <button class="back-btn" onclick="app.goBack()">
+                <i class="fa-solid fa-arrow-left"></i> Geri
+            </button>
+            <h2><i class="fa-solid fa-film"></i> <span data-i18n="videosTitle">Tüm Videolar</span></h2>
+        </div>
+
+        <!-- Video Yükleme Alanı -->
+        <div class="upload-zone glass-panel" id="upload-zone">
+            <div class="upload-inner">
+                <i class="fa-solid fa-cloud-arrow-up upload-icon"></i>
+                <h3>Video Yükle</h3>
+                <p>YouTube Video ID gir veya video dosyası yükle</p>
+                <div class="upload-options">
+                    <div class="yt-id-input">
+                        <input type="text" id="yt-id-field" placeholder="YouTube Video ID (örn: dQw4w9WgXcQ)">
+                        <input type="text" id="yt-title-field" placeholder="Video Başlığı">
+                        <input type="text" id="yt-tags-field" placeholder="Etiketler (virgülle ayır)">
+                        <select id="yt-category">
+                            <option value="Oyun">🎮 Oyun</option>
+                            <option value="Kodlama">💻 Kodlama</option>
+                            <option value="Müzik">🎵 Müzik</option>
+                            <option value="Vlog">📷 Vlog</option>
+                        </select>
+                        <button class="btn-primary" onclick="app.addYTVideo()">
+                            <i class="fa-brands fa-youtube"></i> YouTube Videosu Ekle
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filtre -->
+        <div class="filter-bar glass-panel">
+            <button class="filter-btn active" onclick="app.filterVideos('all', this)">Tümü</button>
+            <button class="filter-btn" onclick="app.filterVideos('Oyun', this)">🎮 Oyun</button>
+            <button class="filter-btn" onclick="app.filterVideos('Kodlama', this)">💻 Kodlama</button>
+            <button class="filter-btn" onclick="app.filterVideos('Müzik', this)">🎵 Müzik</button>
+            <button class="filter-btn" onclick="app.filterVideos('Vlog', this)">📷 Vlog</button>
+        </div>
+
+        <div class="video-grid" id="videos-grid"></div>
+        <div id="videos-empty" class="empty-state hidden">
+            <i class="fa-solid fa-film"></i>
+            <p>Henüz bu kategoride video yok. Yukarıdan ekle!</p>
+        </div>
+    </div>
+
+    <!-- ===== SAYFA: SHORTS ===== -->
+    <div id="page-shorts" class="page hidden">
+        <div class="page-header">
+            <button class="back-btn" onclick="app.goBack()">
+                <i class="fa-solid fa-arrow-left"></i> Geri
+            </button>
+            <h2><i class="fa-solid fa-mobile-screen"></i> Shorts</h2>
+        </div>
+
+        <!-- Short Yükleme -->
+        <div class="upload-zone glass-panel" id="shorts-upload-zone">
+            <div class="upload-inner">
+                <i class="fa-solid fa-mobile-screen upload-icon"></i>
+                <h3>Short Ekle</h3>
+                <div class="upload-options">
+                    <div class="yt-id-input">
+                        <input type="text" id="short-id-field" placeholder="YouTube Short ID">
+                        <input type="text" id="short-title-field" placeholder="Short Başlığı">
+                        <button class="btn-primary" onclick="app.addShort()">
+                            <i class="fa-solid fa-plus"></i> Short Ekle
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="shorts-grid" id="shorts-grid"></div>
+        <div id="shorts-empty" class="empty-state hidden">
+            <i class="fa-solid fa-mobile-screen"></i>
+            <p>Henüz short yok. Yukarıdan ekle!</p>
+        </div>
+    </div>
+
+    <!-- ===== SAYFA: VİDEO İZLE ===== -->
+    <div id="page-watch" class="page hidden">
+        <div id="main-content">
+            <section id="video-section">
+                <!-- Geri Butonu + Video Başlığı -->
+                <div class="video-nav">
+                    <button class="back-btn" onclick="app.goBack()">
+                        <i class="fa-solid fa-arrow-left"></i> Geri
+                    </button>
+                    <div class="video-nav-info">
+                        <span id="watch-category-tag" class="tag"></span>
+                    </div>
+                </div>
+
+                <!-- Özel Video Oynatıcı -->
+                <div id="player-wrapper">
+                    <div id="yt-player"></div>
+
+                    <!-- PiP Kapat Butonu -->
+                    <button id="pip-close-btn" class="hidden" onclick="app.closePIP()">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+
+                    <!-- Theater Kapat -->
+                    <button id="theater-close-btn" class="hidden" onclick="app.closeTheater()">
+                        <i class="fa-solid fa-compress"></i> Sinema Modundan Çık
+                    </button>
+
+                    <div id="custom-controls">
+                        <!-- Progress Bar -->
+                        <div class="progress-container" id="progress-container"
+                             onclick="app.seekVideo(event)"
+                             onmousemove="app.previewTime(event)"
+                             onmouseleave="app.hideTimePreview()">
+                            <div id="progress-buffer"></div>
+                            <div id="progress-bar"></div>
+                            <div id="time-preview" class="hidden"></div>
+                        </div>
+                        <!-- Kontroller -->
+                        <div class="control-row">
+                            <button onclick="app.skipSeconds(-10)" class="tooltip" data-tip="-10s">
+                                <i class="fa-solid fa-backward"></i>
+                            </button>
+                            <button onclick="app.togglePlay()" class="play-btn">
+                                <i class="fa-solid fa-play" id="play-icon"></i>
+                            </button>
+                            <button onclick="app.skipSeconds(10)" class="tooltip" data-tip="+10s">
+                                <i class="fa-solid fa-forward"></i>
+                            </button>
+                            <button onclick="app.toggleMute()" class="tooltip" data-tip="Sessiz (M)">
+                                <i class="fa-solid fa-volume-high" id="vol-icon"></i>
+                            </button>
+                            <input type="range" id="vol-slider" min="0" max="100" value="100"
+                                   oninput="app.setVolume(this.value)">
+                            <span id="time-display">0:00 / 0:00</span>
+
+                            <div class="right-controls">
+                                <button onclick="app.toggleAutoplay()" id="autoplay-btn" class="tooltip" data-tip="Otomatik Oynat">
+                                    <i class="fa-solid fa-circle-play"></i> <span id="autoplay-txt">Açık</span>
+                                </button>
+                                <button onclick="app.toggleLoop()" id="loop-btn" class="tooltip" data-tip="Döngü">
+                                    <i class="fa-solid fa-repeat"></i>
+                                </button>
+                                <button onclick="app.toggleCC()" id="cc-btn" class="tooltip" data-tip="Altyazı">
+                                    <i class="fa-solid fa-closed-captioning"></i>
+                                </button>
+                                <select onchange="app.setSpeed(this.value)" class="speed-select" id="speed-select">
+                                    <option value="0.25">0.25x</option>
+                                    <option value="0.5">0.5x</option>
+                                    <option value="0.75">0.75x</option>
+                                    <option value="1" selected>1x</option>
+                                    <option value="1.25">1.25x</option>
+                                    <option value="1.5">1.5x</option>
+                                    <option value="1.75">1.75x</option>
+                                    <option value="2">2x</option>
+                                </select>
+                                <button onclick="app.togglePIP()" class="tooltip" data-tip="Pencere içinde Pencere">
+                                    <i class="fa-solid fa-clone"></i>
+                                </button>
+                                <button onclick="app.toggleTheater()" class="tooltip" data-tip="Sinema Modu (F)">
+                                    <i class="fa-solid fa-tv"></i>
+                                </button>
+                                <button onclick="app.toggleFullscreen()" class="tooltip" data-tip="Tam Ekran">
+                                    <i class="fa-solid fa-expand" id="fs-icon"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Video Bilgisi -->
+                <div class="video-info-bar mt-10">
+                    <h2 id="video-title-display">Video Başlığı</h2>
+                    <p id="video-views-display" class="video-meta"></p>
+                </div>
+                <div class="tags mt-10" id="watch-tags"></div>
+
+                <!-- Action Bar -->
+                <div class="action-bar mt-10">
+                    <div class="action-left">
+                        <button onclick="app.like()" id="like-btn" class="action-btn tooltip" data-tip="Beğen">
+                            <i class="fa-solid fa-thumbs-up"></i>
+                            <span id="like-count">0</span>
+                        </button>
+                        <button onclick="app.dislike()" id="dislike-btn" class="action-btn tooltip" data-tip="Beğenme">
+                            <i class="fa-solid fa-thumbs-down"></i>
+                            <span id="dislike-count">0</span>
+                        </button>
+                        <button onclick="app.share()" class="action-btn">
+                            <i class="fa-solid fa-share"></i> Paylaş
+                        </button>
+                        <button onclick="app.copyTimestamp()" class="action-btn tooltip" data-tip="Anı Kopyala">
+                            <i class="fa-solid fa-link"></i> Zamana Link
+                        </button>
+                        <button onclick="app.addCurrentToPlaylist()" class="action-btn tooltip" data-tip="Listeye Ekle">
+                            <i class="fa-solid fa-plus"></i> Listeye Ekle
+                        </button>
+                    </div>
+                    <button onclick="app.report()" class="action-btn report-btn">
+                        <i class="fa-solid fa-flag"></i> Şikayet Et
+                    </button>
+                </div>
+
+                <!-- Sosyal Paylaşım -->
+                <div class="social-share mt-10">
+                    <span>Paylaş:</span>
+                    <button onclick="app.shareSocial('twitter')" class="social-btn twitter">
+                        <i class="fa-brands fa-x-twitter"></i>
+                    </button>
+                    <button onclick="app.shareSocial('whatsapp')" class="social-btn whatsapp">
+                        <i class="fa-brands fa-whatsapp"></i>
+                    </button>
+                    <button onclick="app.shareSocial('telegram')" class="social-btn telegram">
+                        <i class="fa-brands fa-telegram"></i>
+                    </button>
+                    <button onclick="app.shareSocial('reddit')" class="social-btn reddit">
+                        <i class="fa-brands fa-reddit"></i>
+                    </button>
+                </div>
+
+                <!-- Yorumlar -->
+                <div id="comments-section" class="mt-20 glass-panel">
+                    <h3><i class="fa-solid fa-comments"></i> <span data-i18n="commentsTitle">Yorumlar</span></h3>
+                    <div class="comment-input-box">
+                        <img src="https://placehold.co/36x36/0a0a0f/00f3ff?text=S" id="comment-pfp" alt="pfp">
+                        <div class="comment-input-inner">
+                            <input type="text" id="comment-input"
+                                   placeholder="Bir şeyler yaz..."
+                                   onkeyup="if(event.key==='Enter') app.addComment()">
+                            <div class="comment-input-actions hidden" id="comment-actions-row">
+                                <button onclick="app.cancelComment()" class="btn-ghost">İptal</button>
+                                <button onclick="app.addComment()" class="btn-primary">
+                                    <i class="fa-solid fa-paper-plane"></i> Yorum Yap
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="comment-list"></div>
+                </div>
+            </section>
+
+            <!-- Sidebar -->
+            <aside id="sidebar">
+                <!-- Kullanıcı XP Kartı -->
+                <div class="glass-panel profile-card">
+                    <div class="profile-card-top">
+                        <img id="sidebar-pfp" src="https://placehold.co/48x48/0a0a0f/00f3ff?text=MV" alt="pfp">
+                        <div>
+                            <h3>
+                                <span id="display-name">Misafir</span>
+                                <i id="top-contributor" class="fa-solid fa-star hidden tooltip" data-tip="Top Katkıcı" style="color:var(--gold)"></i>
+                            </h3>
+                            <span id="rank-badge" class="rank-tag">Çaylak</span>
+                        </div>
+                    </div>
+                    <div class="xp-stats">
+                        <div class="xp-labels">
+                            <span>Seviye <strong id="level-txt">1</strong></span>
+                            <span><span id="xp-txt">0</span> / <span id="xp-next">500</span> XP</span>
+                        </div>
+                        <div class="xp-bar-bg">
+                            <div id="xp-bar-fill"></div>
+                        </div>
+                        <p class="streak-txt">
+                            <i class="fa-solid fa-fire" style="color:#ff6b35"></i>
+                            Seri: <strong id="streak-txt">1</strong> Gün
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Canlı Sohbet -->
+                <div class="glass-panel mt-10" id="live-chat-container">
+                    <div class="chat-header">
+                        <h4><i class="fa-solid fa-signal" style="color:#0f0"></i> Canlı Sohbet</h4>
+                        <button onclick="app.toggleChat()" id="chat-toggle-btn">Gizle</button>
+                    </div>
+                    <div id="live-chat" class="chat-box"></div>
+                    <div class="chat-input-row">
+                        <input type="text" id="chat-input" placeholder="Mesaj yaz...">
+                        <button onclick="app.sendChatMessage()"><i class="fa-solid fa-paper-plane"></i></button>
+                    </div>
+                </div>
+
+                <!-- Sıradaki Videolar -->
+                <div class="glass-panel mt-10" id="related-videos">
+                    <h4 data-i18n="related"><i class="fa-solid fa-list"></i> Sıradaki Videolar</h4>
+                    <div id="related-list"></div>
+                </div>
+            </aside>
+        </div>
+    </div>
+
+    <!-- ===== SAYFA: GEÇMİŞ ===== -->
+    <div id="page-history" class="page hidden">
+        <div class="page-header">
+            <button class="back-btn" onclick="app.goBack()">
+                <i class="fa-solid fa-arrow-left"></i> Geri
+            </button>
+            <h2><i class="fa-solid fa-clock-rotate-left"></i> İzleme Geçmişi</h2>
+            <button class="btn-danger-sm" onclick="app.clearHistory()">Geçmişi Temizle</button>
+        </div>
+        <div class="video-grid" id="history-grid"></div>
+        <div id="history-empty" class="empty-state hidden">
+            <i class="fa-solid fa-clock-rotate-left"></i>
+            <p>Henüz video izlemedin.</p>
+        </div>
+    </div>
+
+    <!-- ===== FOOTER ===== -->
+    <footer class="glass-panel" id="main-footer">
+        <div class="footer-inner">
+            <div class="footer-brand">
+                <span class="logo"><i class="fa-solid fa-code"></i> MV HUB</span>
+                <p>© 2026 Mavi Varlık | Siber Estetikle Kodlandı</p>
+            </div>
+            <div class="footer-links">
+                <button onclick="app.openModal('about-modal')">Hakkımızda</button>
+                <button onclick="app.openModal('privacy-modal')">Gizlilik</button>
+                <button onclick="app.openModal('tos-modal')">Kullanım Şartları</button>
+                <button onclick="app.openModal('recipe-modal')">🍹 Tarif</button>
+            </div>
+            <div class="footer-social">
+                <button onclick="app.shareSocial('twitter')" class="social-btn twitter">
+                    <i class="fa-brands fa-x-twitter"></i>
+                </button>
+                <button onclick="app.shareSocial('whatsapp')" class="social-btn whatsapp">
+                    <i class="fa-brands fa-whatsapp"></i>
+                </button>
+            </div>
+        </div>
     </footer>
 
-    <div id="admin-modal" class="modal hidden">
+    <!-- ===== MODALLAR ===== -->
+
+    <!-- Admin Modalı -->
+    <div id="admin-modal" class="modal hidden" onclick="app.modalOutsideClick(event, 'admin-modal')">
         <div class="modal-content glass-panel">
-            <h3>Sistem Yöneticisi</h3>
-            <input type="text" id="a-usr" placeholder="Kullanıcı Adı">
-            <div style="position:relative">
-                <input type="password" id="a-pwd" placeholder="Şifre (65)">
-                <i class="fa-solid fa-eye" onclick="app.togglePass('a-pwd')" style="position:absolute; right:10px; top:10px; cursor:pointer;"></i>
+            <div class="modal-header">
+                <h3><i class="fa-solid fa-terminal"></i> Sistem Yöneticisi</h3>
+                <button onclick="app.closeModal('admin-modal')" class="modal-close">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
             </div>
-            <input type="password" id="a-key" placeholder="Key">
-            <button onclick="app.verifyAdmin()">Giriş</button>
-            <button onclick="app.closeModal('admin-modal')">Kapat</button>
+            <div class="modal-body">
+                <div class="input-group">
+                    <label>Kullanıcı Adı</label>
+                    <input type="text" id="a-usr" placeholder="Kullanıcı adı gir" autocomplete="off">
+                </div>
+                <div class="input-group">
+                    <label>Şifre</label>
+                    <div class="pass-wrapper">
+                        <input type="password" id="a-pwd" placeholder="Şifre" autocomplete="new-password">
+                        <button type="button" onclick="app.togglePass('a-pwd')" class="eye-btn">
+                            <i class="fa-solid fa-eye" id="a-pwd-eye"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="input-group">
+                    <label>Erişim Anahtarı</label>
+                    <div class="pass-wrapper">
+                        <input type="password" id="a-key" placeholder="Key" autocomplete="new-password">
+                        <button type="button" onclick="app.togglePass('a-key')" class="eye-btn">
+                            <i class="fa-solid fa-eye" id="a-key-eye"></i>
+                        </button>
+                    </div>
+                </div>
+                <div id="admin-error" class="error-msg hidden">Hatalı giriş bilgileri!</div>
+            </div>
+            <div class="modal-footer">
+                <button onclick="app.verifyAdmin()" class="btn-primary">
+                    <i class="fa-solid fa-unlock"></i> Giriş
+                </button>
+                <button onclick="app.closeModal('admin-modal')" class="btn-ghost">İptal</button>
+            </div>
         </div>
     </div>
 
-    <div id="settings-modal" class="modal hidden">
+    <!-- Ayarlar Modalı -->
+    <div id="settings-modal" class="modal hidden" onclick="app.modalOutsideClick(event, 'settings-modal')">
         <div class="modal-content glass-panel">
-            <h3>Görsel Ayarlar</h3>
-            <label>Tema Rengi (38): <input type="color" id="color-picker" value="#00f3ff" onchange="app.changeAccent(this.value)"></label>
-            <label>Yazı Boyutu (39): <input type="range" min="12" max="24" value="16" onchange="app.changeFontSize(this.value)"></label>
-            <button onclick="app.closeModal('settings-modal')">Kapat</button>
+            <div class="modal-header">
+                <h3><i class="fa-solid fa-palette"></i> Görsel Ayarlar</h3>
+                <button onclick="app.closeModal('settings-modal')" class="modal-close">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div class="modal-body settings-body">
+                <div class="setting-row">
+                    <span>Tema Rengi (Vurgu)</span>
+                    <input type="color" id="color-picker" value="#00f3ff"
+                           oninput="app.changeAccent(this.value)">
+                </div>
+                <div class="setting-row">
+                    <span>Yazı Boyutu</span>
+                    <div class="range-with-val">
+                        <input type="range" min="12" max="24" value="16" id="font-range"
+                               oninput="app.changeFontSize(this.value)">
+                        <span id="font-size-val">16px</span>
+                    </div>
+                </div>
+                <div class="setting-row">
+                    <span>Tema</span>
+                    <button onclick="app.toggleTheme()" class="btn-secondary" id="theme-toggle-btn">
+                        <i class="fa-solid fa-moon"></i> Karanlık
+                    </button>
+                </div>
+                <div class="setting-row">
+                    <span>Önceden Ayarlanmış Renkler</span>
+                    <div class="preset-colors">
+                        <button onclick="app.changeAccent('#00f3ff')" style="background:#00f3ff" class="color-preset" title="Siyan"></button>
+                        <button onclick="app.changeAccent('#b026ff')" style="background:#b026ff" class="color-preset" title="Mor"></button>
+                        <button onclick="app.changeAccent('#ff3366')" style="background:#ff3366" class="color-preset" title="Kırmızı"></button>
+                        <button onclick="app.changeAccent('#00ff88')" style="background:#00ff88" class="color-preset" title="Yeşil"></button>
+                        <button onclick="app.changeAccent('#ffd700')" style="background:#ffd700" class="color-preset" title="Altın"></button>
+                        <button onclick="app.changeAccent('#ff8c00')" style="background:#ff8c00" class="color-preset" title="Turuncu"></button>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button onclick="app.resetSettings()" class="btn-ghost">Sıfırla</button>
+                <button onclick="app.closeModal('settings-modal')" class="btn-primary">Tamam</button>
+            </div>
         </div>
     </div>
 
-    <div id="shortcuts-modal" class="modal hidden">
+    <!-- Kısayollar Modalı -->
+    <div id="shortcuts-modal" class="modal hidden" onclick="app.modalOutsideClick(event, 'shortcuts-modal')">
         <div class="modal-content glass-panel">
-            <h3>Kısayollar</h3>
-            <p>K / Boşluk : Oynat/Duraklat</p><p>M : Sessiz</p><p>F : Tam Ekran / Sinema Modu</p>
-            <button onclick="app.closeModal('shortcuts-modal')">Kapat</button>
+            <div class="modal-header">
+                <h3><i class="fa-regular fa-keyboard"></i> Klavye Kısayolları</h3>
+                <button onclick="app.closeModal('shortcuts-modal')" class="modal-close">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="shortcut-list">
+                    <div class="shortcut-row"><kbd>K</kbd> / <kbd>Space</kbd><span>Oynat / Duraklat</span></div>
+                    <div class="shortcut-row"><kbd>M</kbd><span>Sessiz Aç/Kapat</span></div>
+                    <div class="shortcut-row"><kbd>F</kbd><span>Sinema Modu</span></div>
+                    <div class="shortcut-row"><kbd>→</kbd> / <kbd>←</kbd><span>+5 / -5 Saniye</span></div>
+                    <div class="shortcut-row"><kbd>↑</kbd> / <kbd>↓</kbd><span>Ses +10% / -10%</span></div>
+                    <div class="shortcut-row"><kbd>L</kbd><span>+10 Saniye</span></div>
+                    <div class="shortcut-row"><kbd>J</kbd><span>-10 Saniye</span></div>
+                    <div class="shortcut-row"><kbd>0–9</kbd><span>Videoyu % ile ileri sar</span></div>
+                    <div class="shortcut-row"><kbd>Esc</kbd><span>Sinema / Tam Ekrandan Çık</span></div>
+                </div>
+            </div>
         </div>
     </div>
-    
-    <div id="recipe-modal" class="modal hidden">
+
+    <!-- Başarımlar Modalı -->
+    <div id="achievements-modal" class="modal hidden" onclick="app.modalOutsideClick(event, 'achievements-modal')">
         <div class="modal-content glass-panel">
-            <h3>Mavi Varlık İksiri</h3>
-            <p>1. Limon ve portakal sık.<br>2. Nane ekle.<br>3. Maden suyu koy ve buz at. Afiyet olsun!</p>
-            <button onclick="app.closeModal('recipe-modal')">Kapat</button>
+            <div class="modal-header">
+                <h3><i class="fa-solid fa-trophy"></i> Başarımlar</h3>
+                <button onclick="app.closeModal('achievements-modal')" class="modal-close">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="achievements-grid" id="achievements-grid"></div>
+            </div>
         </div>
     </div>
 
-    <div id="error-404" class="hidden">
-        <h2>404 - Video Bulunamadı!</h2>
-        <button onclick="location.reload()">Geri Dön</button>
+    <!-- Oynatma Listesi Modalı -->
+    <div id="playlist-modal" class="modal hidden" onclick="app.modalOutsideClick(event, 'playlist-modal')">
+        <div class="modal-content glass-panel">
+            <div class="modal-header">
+                <h3><i class="fa-solid fa-list"></i> Oynatma Listem</h3>
+                <button onclick="app.closeModal('playlist-modal')" class="modal-close">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div id="playlist-modal-list"></div>
+                <div id="playlist-empty" class="empty-state hidden">
+                    <i class="fa-solid fa-list"></i>
+                    <p>Liste boş. Video izlerken listeye ekle!</p>
+                </div>
+            </div>
+        </div>
     </div>
 
-    <audio id="ui-click" src="https://www.soundjay.com/buttons/sounds/button-09.mp3"></audio> <script src="app.js"></script>
+    <!-- Şikayet Modalı -->
+    <div id="report-modal" class="modal hidden" onclick="app.modalOutsideClick(event, 'report-modal')">
+        <div class="modal-content glass-panel">
+            <div class="modal-header">
+                <h3><i class="fa-solid fa-flag"></i> Videoyu Şikayet Et</h3>
+                <button onclick="app.closeModal('report-modal')" class="modal-close">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p>Şikayet nedeninizi seçin:</p>
+                <div class="report-options">
+                    <label><input type="radio" name="report" value="spam"> Spam / Yanıltıcı</label>
+                    <label><input type="radio" name="report" value="hate"> Nefret Söylemi</label>
+                    <label><input type="radio" name="report" value="copy"> Telif Hakkı İhlali</label>
+                    <label><input type="radio" name="report" value="violence"> Şiddet İçeriği</label>
+                    <label><input type="radio" name="report" value="other"> Diğer</label>
+                </div>
+                <textarea id="report-detail" placeholder="Açıklama (opsiyonel)" rows="3"></textarea>
+            </div>
+            <div class="modal-footer">
+                <button onclick="app.submitReport()" class="btn-danger">Şikayet Gönder</button>
+                <button onclick="app.closeModal('report-modal')" class="btn-ghost">İptal</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Paylaş Modalı -->
+    <div id="share-modal" class="modal hidden" onclick="app.modalOutsideClick(event, 'share-modal')">
+        <div class="modal-content glass-panel">
+            <div class="modal-header">
+                <h3><i class="fa-solid fa-share-nodes"></i> Paylaş</h3>
+                <button onclick="app.closeModal('share-modal')" class="modal-close">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="share-url-box">
+                    <input type="text" id="share-url-input" readonly>
+                    <button onclick="app.copyShareUrl()" class="btn-primary">
+                        <i class="fa-solid fa-copy"></i> Kopyala
+                    </button>
+                </div>
+                <div class="share-socials">
+                    <button onclick="app.shareSocial('twitter')" class="social-btn-big twitter">
+                        <i class="fa-brands fa-x-twitter"></i> Twitter / X
+                    </button>
+                    <button onclick="app.shareSocial('whatsapp')" class="social-btn-big whatsapp">
+                        <i class="fa-brands fa-whatsapp"></i> WhatsApp
+                    </button>
+                    <button onclick="app.shareSocial('telegram')" class="social-btn-big telegram">
+                        <i class="fa-brands fa-telegram"></i> Telegram
+                    </button>
+                    <button onclick="app.shareSocial('reddit')" class="social-btn-big reddit">
+                        <i class="fa-brands fa-reddit"></i> Reddit
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hakkımızda Modalı -->
+    <div id="about-modal" class="modal hidden" onclick="app.modalOutsideClick(event, 'about-modal')">
+        <div class="modal-content glass-panel">
+            <div class="modal-header">
+                <h3><i class="fa-solid fa-circle-info"></i> Hakkımızda</h3>
+                <button onclick="app.closeModal('about-modal')" class="modal-close">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p><strong>Mavi Varlık Video Hub</strong> — Oyun, kodlama ve siber kültür içeriklerinin merkezi.</p>
+                <p class="mt-10">YouTube videolarını kendi arayüzünde izle, XP kazan, sıralamada yüksel.</p>
+                <p class="mt-10">Yapımcı: <strong>Mavi Varlık</strong></p>
+                <p>Versiyon: <strong>2.0.0</strong> | 2026</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Gizlilik Modalı -->
+    <div id="privacy-modal" class="modal hidden" onclick="app.modalOutsideClick(event, 'privacy-modal')">
+        <div class="modal-content glass-panel">
+            <div class="modal-header">
+                <h3><i class="fa-solid fa-shield-halved"></i> Gizlilik Politikası</h3>
+                <button onclick="app.closeModal('privacy-modal')" class="modal-close">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p>Bu platform yalnızca tarayıcınızda çalışır. Tüm veriler (XP, seri, liste) yalnızca kendi cihazınızda saklanır. Herhangi bir sunucuya kişisel veri gönderilmez.</p>
+                <p class="mt-10">Yüklenen profil fotoğrafları yalnızca oturum süresince hafızada tutulur.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Kullanım Şartları Modalı -->
+    <div id="tos-modal" class="modal hidden" onclick="app.modalOutsideClick(event, 'tos-modal')">
+        <div class="modal-content glass-panel">
+            <div class="modal-header">
+                <h3><i class="fa-solid fa-file-contract"></i> Kullanım Şartları</h3>
+                <button onclick="app.closeModal('tos-modal')" class="modal-close">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p>1. Bu platform eğitim amaçlıdır.</p>
+                <p class="mt-10">2. İçerikler YouTube üzerinden yüklenir; telif hakları içerik sahiplerine aittir.</p>
+                <p class="mt-10">3. Sistemi kötüye kullanmak yasaktır.</p>
+                <p class="mt-10">4. Kullanarak bu şartları kabul etmiş sayılırsınız.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tarif Modalı -->
+    <div id="recipe-modal" class="modal hidden" onclick="app.modalOutsideClick(event, 'recipe-modal')">
+        <div class="modal-content glass-panel">
+            <div class="modal-header">
+                <h3>🍹 Mavi Varlık İksiri</h3>
+                <button onclick="app.closeModal('recipe-modal')" class="modal-close">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <ol style="padding-left:20px; line-height:2">
+                    <li>1 limon ve 1 portakal sık.</li>
+                    <li>Taze nane yaprakları ekle.</li>
+                    <li>Maden suyu doldur ve buz at.</li>
+                    <li>İsteğe bağlı: 1 tatlı kaşığı bal.</li>
+                </ol>
+                <p class="mt-10" style="color:var(--accent)">Afiyet Olsun! 🧊</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Bildirimi -->
+    <div id="toast" class="toast hidden"></div>
+
+    <!-- UI Sesi (base64 kısa beep) -->
+    <audio id="ui-click">
+        <source src="data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2lAKTNwrN3rr2w7HiZJaqzZ7bBwOCAqT3q24MCIVisfNVp5oM+rfmI+Kj9kk8LMl3RRMCk2W4S51ramblAvN2WYztSxgF4wJTlpnNLOqnJRLSY5aJrd2buOZTYlNm6h2NuziF0sHi5mjMXYsYhbMB8ra5XR1rmHWCoeK2+i0dGvglUrHydun9bUs4BWKh4oa5nV0K+CVC0fJm2c19CuglYsHidrm9TPrIFULh8na5nU0a6CVCweJm2b1s+tglQsHihrm9XQrYFULSAnbZzW0K6CVCweJ22b1s+tglQsHihrm9XQrYFULSAnbZzW0K6CVCweJ22b1s+tglQsHihrm9XQrYFULSAnbZzW0K2CVA==" type="audio/wav">
+    </audio>
+
+    <script src="app.js"></script>
 </body>
 </html>
